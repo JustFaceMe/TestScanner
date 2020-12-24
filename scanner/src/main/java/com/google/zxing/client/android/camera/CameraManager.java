@@ -63,10 +63,17 @@ public final class CameraManager {
    */
   private final PreviewCallback previewCallback;
 
+  // 开启全屏扫描
+  private boolean isFullScreenScan = true;
+
   public CameraManager(Context context) {
     this.context = context;
     this.configManager = new CameraConfigurationManager(context);
     previewCallback = new PreviewCallback(configManager);
+  }
+
+  public void setFullScreenScan(boolean isFullScreenScan) {
+    this.isFullScreenScan = isFullScreenScan;
   }
 
   /**
@@ -221,12 +228,19 @@ public final class CameraManager {
         return null;
       }
 
-      int width = findDesiredDimensionInRange(screenResolution.x, MIN_FRAME_WIDTH, MAX_FRAME_WIDTH);
-      int height = findDesiredDimensionInRange(screenResolution.y, MIN_FRAME_HEIGHT, MAX_FRAME_HEIGHT);
+      int width = screenResolution.x;
+      int height = screenResolution.y;
 
-      int leftOffset = (screenResolution.x - width) / 2;
-      int topOffset = (screenResolution.y - height) / 2;
-      framingRect = new Rect(leftOffset, topOffset, leftOffset + width, topOffset + height);
+      if(isFullScreenScan){
+        framingRect = new Rect(0,0,width,height);
+      } else {
+        width = findDesiredDimensionInRange(screenResolution.x, MIN_FRAME_WIDTH, MAX_FRAME_WIDTH);
+        height = findDesiredDimensionInRange(screenResolution.y, MIN_FRAME_HEIGHT, MAX_FRAME_HEIGHT);
+
+        int leftOffset = (screenResolution.x - width) / 2;
+        int topOffset = (screenResolution.y - height) / 2;
+        framingRect = new Rect(leftOffset, topOffset, leftOffset + width, topOffset + height);
+      }
     }
     return framingRect;
   }
@@ -320,6 +334,9 @@ public final class CameraManager {
       return null;
     }
     // Go ahead and assume it's YUV rather than die.
+    if(isFullScreenScan){
+      return new PlanarYUVLuminanceSource(data,width,height,0,0,width,height,false);
+    }
     return new PlanarYUVLuminanceSource(data, width, height, rect.left, rect.top,
                                         rect.width(), rect.height(), false);
   }
