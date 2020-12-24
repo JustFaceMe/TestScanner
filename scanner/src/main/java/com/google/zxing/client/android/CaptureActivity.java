@@ -43,6 +43,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -479,7 +480,7 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
 
   /**
    * Superimpose a line for 1D or dots for 2D to highlight the key features of the barcode.
-   *
+   * 高亮识别的二维码
    * @param barcode   A bitmap of the captured image.
    * @param scaleFactor amount by which thumbnail was scaled
    * @param rawResult The decoded results which contains the points to draw.
@@ -520,7 +521,14 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
     }
   }
 
-  // Put up our own UI for how to handle the decoded contents.
+  /**
+   * 处理扫描结果
+   * 把扫描结果展示在屏幕上，并保存到剪切板
+   * Put up our own UI for how to handle the decoded contents.
+   * @param rawResult
+   * @param resultHandler
+   * @param barcode
+   */
   private void handleDecodeInternally(Result rawResult, ResultHandler resultHandler, Bitmap barcode) {
 
     maybeSetClipboard(resultHandler);
