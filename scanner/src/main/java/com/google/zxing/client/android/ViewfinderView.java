@@ -90,13 +90,9 @@ public final class ViewfinderView extends View {
     }
     int width = canvas.getWidth();
     int height = canvas.getHeight();
-
-    // Draw the exterior (i.e. outside the framing rect) darkened
-    paint.setColor(resultBitmap != null ? resultColor : maskColor);
-    canvas.drawRect(0, 0, width, frame.top, paint);
-    canvas.drawRect(0, frame.top, frame.left, frame.bottom + 1, paint);
-    canvas.drawRect(frame.right + 1, frame.top, width, frame.bottom + 1, paint);
-    canvas.drawRect(0, frame.bottom + 1, width, height, paint);
+    // Draw background
+    paint.setColor(maskColor);
+    canvas.drawRect(0, 0, width, height, paint);
 
     if (resultBitmap != null) {
       // Draw the opaque result bitmap over the scanning rectangle
@@ -148,11 +144,7 @@ public final class ViewfinderView extends View {
 
       // Request another update at the animation interval, but only repaint the laser line,
       // not the entire viewfinder mask.
-      postInvalidateDelayed(ANIMATION_DELAY,
-                            frame.left - POINT_SIZE,
-                            frame.top - POINT_SIZE,
-                            frame.right + POINT_SIZE,
-                            frame.bottom + POINT_SIZE);
+      postInvalidateDelayed(ANIMATION_DELAY);
     }
   }
 
