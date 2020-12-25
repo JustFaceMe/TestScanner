@@ -41,6 +41,7 @@ import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.net.Uri;
 import android.os.Build;
@@ -84,7 +85,7 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
   private static final String TAG = CaptureActivity.class.getSimpleName();
 
   private static final long DEFAULT_INTENT_RESULT_DURATION_MS = 1500L;
-  public static final long BULK_MODE_SCAN_DELAY_MS = 0L;
+  public static final long BULK_MODE_SCAN_DELAY_MS = 1000L;
 
   private static final String[] ZXING_URLS = { "http://zxing.appspot.com/scan", "zxing://scan/" };
 
@@ -463,17 +464,18 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
         }
         break;
       case NONE:
-//        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-//        if (fromLiveScan && prefs.getBoolean(PreferencesActivity.KEY_BULK_MODE, false)) {
-//          Toast.makeText(getApplicationContext(),
-//                         getResources().getString(R.string.msg_bulk_mode_scanned) + " (" + rawResult.getText() + ')',
-//                         Toast.LENGTH_SHORT).show();
-//          maybeSetClipboard(resultHandler);
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        if (fromLiveScan && prefs.getBoolean(PreferencesActivity.KEY_BULK_MODE, false)) {
+          Toast.makeText(getApplicationContext(),
+                         getResources().getString(R.string.msg_bulk_mode_scanned) + " (" + rawResult.getText() + ')',
+                         Toast.LENGTH_SHORT).show();
+          maybeSetClipboard(resultHandler);
           // Wait a moment or else it will scan the same barcode continuously about 3 times
           restartPreviewAfterDelay(BULK_MODE_SCAN_DELAY_MS);
-//        } else {
+        } else {
 //          handleDecodeInternally(rawResult, resultHandler, barcode);
-//        }
+          handleDecodeExternally(rawResult, resultHandler, barcode);
+        }
         break;
     }
   }
@@ -620,6 +622,7 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
   private void handleDecodeExternally(Result rawResult, ResultHandler resultHandler, Bitmap barcode) {
 
     if (barcode != null) {
+      barcode = rotateBitmap(barcode);
       viewfinderView.drawResultBitmap(barcode);
     }
 
@@ -768,5 +771,21 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
 
   public void drawViewfinder() {
     viewfinderView.drawViewfinder();
+  }
+
+  private static Bitmap rotateBitmap(Bitmap origin) {
+    if (origin == null) {
+      return null;
+    }
+    int width = origin.getWidth();
+    int height = origin.getHeight();
+    Matrix matrix = new Matrix();
+    matrix.setRotate(90);
+    Bitmap newBM = Bitmap.createBitmap(origin, 0, 0, width, height, matrix, false);
+    if (newBM.equals(origin)) {
+      return newBM;
+    }
+    origin.recycle();
+    return newBM;
   }
 }

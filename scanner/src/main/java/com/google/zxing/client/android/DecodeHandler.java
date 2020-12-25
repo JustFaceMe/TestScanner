@@ -19,11 +19,11 @@ package com.google.zxing.client.android;
 import android.graphics.Bitmap;
 import com.google.zxing.BinaryBitmap;
 import com.google.zxing.DecodeHintType;
-import com.google.zxing.MultiFormatReader;
 import com.google.zxing.PlanarYUVLuminanceSource;
 import com.google.zxing.ReaderException;
 import com.google.zxing.Result;
 import com.google.zxing.common.HybridBinarizer;
+import com.google.zxing.multi.qrcode.QRCodeMultiReader;
 
 import android.os.Bundle;
 import android.os.Handler;
@@ -36,12 +36,13 @@ import java.util.Map;
 final class DecodeHandler extends Handler {
 
   private final CaptureActivity activity;
-  private final MultiFormatReader multiFormatReader;
+  private final QRCodeMultiReader qrCodeMultiReader;
+  private Map<DecodeHintType,?> hints;
   private boolean running = true;
 
   DecodeHandler(CaptureActivity activity, Map<DecodeHintType,Object> hints) {
-    multiFormatReader = new MultiFormatReader();
-    multiFormatReader.setHints(hints);
+    qrCodeMultiReader = new QRCodeMultiReader();
+    this.hints = hints;
     this.activity = activity;
   }
 
@@ -67,24 +68,24 @@ final class DecodeHandler extends Handler {
    * @param height The height of the preview frame.
    */
   private void decode(byte[] data, int width, int height) {
-    Result rawResult = null;
+    Result[] results = null;
     PlanarYUVLuminanceSource source = activity.getCameraManager().buildLuminanceSource(data, width, height);
     if (source != null) {
       BinaryBitmap bitmap = new BinaryBitmap(new HybridBinarizer(source));
       try {
-        rawResult = multiFormatReader.decodeWithState(bitmap);
+        results = qrCodeMultiReader.decodeMultiple(bitmap, hints);
       } catch (ReaderException re) {
         // continue
       } finally {
-        multiFormatReader.reset();
+        qrCodeMultiReader.reset();
       }
     }
 
     Handler handler = activity.getHandler();
-    if (rawResult != null) {
+    if (results != null && results.length > 0) {
       // Don't log the barcode contents for security.
       if (handler != null) {
-        Message message = Message.obtain(handler, R.id.decode_succeeded, rawResult);
+        Message message = Message.obtain(handler, R.id.decode_succeeded, results);
         Bundle bundle = new Bundle();
         bundleThumbnail(source, bundle);
         message.setData(bundle);
@@ -108,5 +109,4 @@ final class DecodeHandler extends Handler {
     bundle.putByteArray(DecodeThread.BARCODE_BITMAP, out.toByteArray());
     bundle.putFloat(DecodeThread.BARCODE_SCALED_FACTOR, (float) width / source.getWidth());
   }
-
 }

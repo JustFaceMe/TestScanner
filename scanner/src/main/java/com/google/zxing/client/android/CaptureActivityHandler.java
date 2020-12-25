@@ -36,7 +36,6 @@ import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 
@@ -54,8 +53,6 @@ public final class CaptureActivityHandler extends Handler {
   private State state;
   private final CameraManager cameraManager;
 
-  private boolean hasDecoded;
-
   private enum State {
     PREVIEW,
     SUCCESS,
@@ -68,8 +65,6 @@ public final class CaptureActivityHandler extends Handler {
                          String characterSet,
                          CameraManager cameraManager) {
     this.activity = activity;
-    ResultManager.clear();
-    hasDecoded = false;
     decodeThread = new DecodeThread(activity, decodeFormats, baseHints, characterSet,
         new ViewfinderResultPointCallback(activity.getViewfinderView()));
     decodeThread.start();
@@ -84,38 +79,28 @@ public final class CaptureActivityHandler extends Handler {
   @Override
   public void handleMessage(Message message) {
     if (message.what == R.id.restart_preview) {
-      ResultManager.addCount();
       restartPreviewAndDecode();
     } else if (message.what == R.id.decode_succeeded) {
       state = State.SUCCESS;
-      if(!ResultManager.addCount()) {
-        return;
-      }
-      if(!ResultManager.addResult((Result) message.obj)) {
-        activity.restartPreviewAfterDelay(CaptureActivity.BULK_MODE_SCAN_DELAY_MS);
-        return;
-      }
-
       Bundle bundle = message.getData();
       Bitmap barcode = null;
       float scaleFactor = 1.0f;
       if (bundle != null) {
-        if(!hasDecoded) {
-          byte[] compressedBitmap = bundle.getByteArray(DecodeThread.BARCODE_BITMAP);
-          if (compressedBitmap != null) {
-            barcode = BitmapFactory.decodeByteArray(compressedBitmap, 0, compressedBitmap.length, null);
-            // Mutable copy:
-            barcode = barcode.copy(Bitmap.Config.ARGB_8888, true);
-          }
-          hasDecoded = true;
-          Log.e("ResultManager", "hasDecoded" + hasDecoded);
+        byte[] compressedBitmap = bundle.getByteArray(DecodeThread.BARCODE_BITMAP);
+        if (compressedBitmap != null) {
+          barcode = BitmapFactory.decodeByteArray(compressedBitmap, 0, compressedBitmap.length, null);
+          // Mutable copy:
+          barcode = barcode.copy(Bitmap.Config.ARGB_8888, true);
         }
         scaleFactor = bundle.getFloat(DecodeThread.BARCODE_SCALED_FACTOR);
       }
-      activity.handleDecode((Result) message.obj, barcode, scaleFactor);
+      Result[] results = (Result[]) message.obj;
+      for(int i = 0; i < results.length; i++) {
+        Log.e("QrCode",  i + " -- " + results[i].toString());
+      }
+      activity.handleDecode(results[0], barcode, scaleFactor);
     } else if (message.what == R.id.decode_failed) {// We're decoding as fast as possible, so when one decode fails, start another.
       state = State.PREVIEW;
-      ResultManager.addCount();
       cameraManager.requestPreviewFrame(decodeThread.getHandler(), R.id.decode);
     } else if (message.what == R.id.return_scan_result) {
       activity.setResult(Activity.RESULT_OK, (Intent) message.obj);
