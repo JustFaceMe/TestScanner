@@ -342,4 +342,7 @@ public final class CameraManager {
                                         rect.width(), rect.height(), false);
   }
 
+  public OpenCamera getCamera() {
+    return camera;
+  }
 }

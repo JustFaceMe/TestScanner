@@ -25,10 +25,15 @@ import com.google.zxing.Result;
 import com.google.zxing.common.HybridBinarizer;
 import com.google.zxing.multi.qrcode.QRCodeMultiReader;
 
+import android.graphics.BitmapFactory;
+import android.graphics.Rect;
+import android.graphics.YuvImage;
+import android.hardware.Camera;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.util.Log;
 
 import java.io.ByteArrayOutputStream;
 import java.util.Map;
@@ -87,7 +92,8 @@ final class DecodeHandler extends Handler {
       if (handler != null) {
         Message message = Message.obtain(handler, R.id.decode_succeeded, results);
         Bundle bundle = new Bundle();
-        bundleThumbnail(source, bundle);
+//        bundleThumbnail(source, bundle);
+        previewFrame(data, source, bundle);
         message.setData(bundle);
         message.sendToTarget();
       }
@@ -108,5 +114,22 @@ final class DecodeHandler extends Handler {
     bitmap.compress(Bitmap.CompressFormat.JPEG, 50, out);
     bundle.putByteArray(DecodeThread.BARCODE_BITMAP, out.toByteArray());
     bundle.putFloat(DecodeThread.BARCODE_SCALED_FACTOR, (float) width / source.getWidth());
+  }
+
+  public void previewFrame(byte[] data, PlanarYUVLuminanceSource source, Bundle bundle) {
+    Camera camera = activity.getCameraManager().getCamera().getCamera();
+    Camera.Size localSize = camera.getParameters().getPreviewSize();  //获得预览分辨率
+    YuvImage localYuvImage = new YuvImage(data, 17, localSize.width, localSize.height, null);
+    ByteArrayOutputStream localByteArrayOutputStream = new ByteArrayOutputStream();
+    //把摄像头回调数据转成YUV，再按图像尺寸压缩成JPEG，从输出流中转成数组
+    localYuvImage.compressToJpeg(new Rect(0, 0, localSize.width, localSize.height), 80, localByteArrayOutputStream);
+    byte[] mParamArrayOfByte = localByteArrayOutputStream.toByteArray();
+    //生成Bitmap
+    BitmapFactory.Options localOptions = new BitmapFactory.Options();
+    localOptions.inPreferredConfig = Bitmap.Config.RGB_565;  //构造位图生成的参数，必须为565。类名+enum
+    Bitmap mCurrentBitmap = BitmapFactory.decodeByteArray(mParamArrayOfByte, 0, mParamArrayOfByte.length, localOptions);
+    Log.e("previewFrame", ""+mCurrentBitmap.getHeight());
+    bundle.putByteArray(DecodeThread.BARCODE_BITMAP, mParamArrayOfByte);
+    bundle.putFloat(DecodeThread.BARCODE_SCALED_FACTOR, (float) mCurrentBitmap.getWidth() / source.getWidth());
   }
 }
