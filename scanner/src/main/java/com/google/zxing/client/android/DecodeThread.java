@@ -60,26 +60,25 @@ final class DecodeThread extends Thread {
       hints.putAll(baseHints);
     }
 
-    // The prefs can't change while the thread is running, so pick them up once here.
+    // The config params can't change while the thread is running, so pick them up once here.
     if (decodeFormats == null || decodeFormats.isEmpty()) {
-      SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(activity);
       decodeFormats = EnumSet.noneOf(BarcodeFormat.class);
-      if (prefs.getBoolean(PreferencesActivity.KEY_DECODE_1D_PRODUCT, true)) {
+      if (DecodeConfigParams.KEY_DECODE_1D_PRODUCT) {
         decodeFormats.addAll(DecodeFormatManager.PRODUCT_FORMATS);
       }
-      if (prefs.getBoolean(PreferencesActivity.KEY_DECODE_1D_INDUSTRIAL, true)) {
+      if (DecodeConfigParams.KEY_DECODE_1D_INDUSTRIAL) {
         decodeFormats.addAll(DecodeFormatManager.INDUSTRIAL_FORMATS);
       }
-      if (prefs.getBoolean(PreferencesActivity.KEY_DECODE_QR, true)) {
+      if (DecodeConfigParams.KEY_DECODE_QR) {
         decodeFormats.addAll(DecodeFormatManager.QR_CODE_FORMATS);
       }
-      if (prefs.getBoolean(PreferencesActivity.KEY_DECODE_DATA_MATRIX, true)) {
+      if (DecodeConfigParams.KEY_DECODE_DATA_MATRIX) {
         decodeFormats.addAll(DecodeFormatManager.DATA_MATRIX_FORMATS);
       }
-      if (prefs.getBoolean(PreferencesActivity.KEY_DECODE_AZTEC, false)) {
+      if (DecodeConfigParams.KEY_DECODE_AZTEC) {
         decodeFormats.addAll(DecodeFormatManager.AZTEC_FORMATS);
       }
-      if (prefs.getBoolean(PreferencesActivity.KEY_DECODE_PDF417, false)) {
+      if (DecodeConfigParams.KEY_DECODE_PDF417) {
         decodeFormats.addAll(DecodeFormatManager.PDF417_FORMATS);
       }
     }

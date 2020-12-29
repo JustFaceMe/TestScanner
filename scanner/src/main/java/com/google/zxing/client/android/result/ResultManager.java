@@ -1,4 +1,4 @@
-package com.google.zxing.client.android.utils;
+package com.google.zxing.client.android.result;
 
 import com.google.zxing.Result;
 import com.google.zxing.ResultPoint;

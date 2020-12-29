@@ -19,6 +19,7 @@ package com.google.zxing.client.android.result;
 import android.telephony.PhoneNumberUtils;
 import com.google.zxing.Result;
 import com.google.zxing.client.android.Contents;
+import com.google.zxing.client.android.DecodeConfigParams;
 import com.google.zxing.client.android.Intents;
 import com.google.zxing.client.android.LocaleManager;
 import com.google.zxing.client.android.PreferencesActivity;
@@ -488,9 +489,7 @@ public abstract class ResultHandler {
   }
 
   private String parseCustomSearchURL() {
-    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(activity);
-    String customProductSearch = prefs.getString(PreferencesActivity.KEY_CUSTOM_PRODUCT_SEARCH,
-        null);
+    String customProductSearch = DecodeConfigParams.KEY_CUSTOM_PRODUCT_SEARCH;
     if (customProductSearch != null && customProductSearch.trim().isEmpty()) {
       return null;
     }

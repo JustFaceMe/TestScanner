@@ -31,7 +31,7 @@ import com.google.zxing.client.android.result.ResultHandler;
 import com.google.zxing.client.android.result.ResultHandlerFactory;
 import com.google.zxing.client.android.result.supplement.SupplementalInfoRetriever;
 import com.google.zxing.client.android.share.ShareActivity;
-import com.google.zxing.client.android.utils.ResultManager;
+import com.google.zxing.client.android.result.ResultManager;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -45,7 +45,6 @@ import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -169,9 +168,7 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
     handler = null;
     lastResult = null;
 
-    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-
-    if (prefs.getBoolean(PreferencesActivity.KEY_DISABLE_AUTO_ORIENTATION, true)) {
+    if (DecodeConfigParams.KEY_DISABLE_AUTO_ORIENTATION) {
       setRequestedOrientation(getCurrentOrientation());
     } else {
       setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
@@ -187,7 +184,7 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
 
     Intent intent = getIntent();
 
-    copyToClipboard = prefs.getBoolean(PreferencesActivity.KEY_COPY_TO_CLIPBOARD, true)
+    copyToClipboard = DecodeConfigParams.KEY_COPY_TO_CLIPBOARD
         && (intent == null || intent.getBooleanExtra(Intents.Scan.SAVE_HISTORY, true));
 
     source = IntentSource.NONE;
@@ -464,8 +461,7 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
         }
         break;
       case NONE:
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        if (fromLiveScan && prefs.getBoolean(PreferencesActivity.KEY_BULK_MODE, false)) {
+        if (fromLiveScan && DecodeConfigParams.KEY_BULK_MODE) {
           Toast.makeText(getApplicationContext(),
                          getResources().getString(R.string.msg_bulk_mode_scanned) + " (" + rawResult.getText() + ')',
                          Toast.LENGTH_SHORT).show();
@@ -535,9 +531,7 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
 
     maybeSetClipboard(resultHandler);
 
-    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-
-    if (resultHandler.getDefaultButtonID() != null && prefs.getBoolean(PreferencesActivity.KEY_AUTO_OPEN_WEB, false)) {
+    if (resultHandler.getDefaultButtonID() != null && DecodeConfigParams.KEY_AUTO_OPEN_WEB) {
       resultHandler.handleButtonPress(resultHandler.getDefaultButtonID());
       return;
     }
@@ -594,8 +588,7 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
     TextView supplementTextView = (TextView) findViewById(R.id.contents_supplement_text_view);
     supplementTextView.setText("");
     supplementTextView.setOnClickListener(null);
-    if (PreferenceManager.getDefaultSharedPreferences(this).getBoolean(
-        PreferencesActivity.KEY_SUPPLEMENTAL, true)) {
+    if (DecodeConfigParams.KEY_SUPPLEMENTAL) {
       SupplementalInfoRetriever.maybeInvokeRetrieval(supplementTextView,
                                                      resultHandler.getResult(),
                                                      historyManager,

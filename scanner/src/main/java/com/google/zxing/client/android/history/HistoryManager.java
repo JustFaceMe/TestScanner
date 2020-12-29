@@ -18,6 +18,7 @@ package com.google.zxing.client.android.history;
 
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.Result;
+import com.google.zxing.client.android.DecodeConfigParams;
 import com.google.zxing.client.android.Intents;
 import com.google.zxing.client.android.PreferencesActivity;
 import com.google.zxing.client.android.result.ResultHandler;
@@ -75,8 +76,7 @@ public final class HistoryManager {
 
   public HistoryManager(Activity activity) {
     this.activity = activity;
-    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(activity);
-    enableHistory = prefs.getBoolean(PreferencesActivity.KEY_ENABLE_HISTORY, true);
+    enableHistory = DecodeConfigParams.KEY_ENABLE_HISTORY;
   }
 
   public boolean hasHistoryItems() {
@@ -154,8 +154,7 @@ public final class HistoryManager {
       return;
     }
 
-    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(activity);
-    if (!prefs.getBoolean(PreferencesActivity.KEY_REMEMBER_DUPLICATES, false)) {
+    if (!DecodeConfigParams.KEY_REMEMBER_DUPLICATES) {
       deletePrevious(result.getText());
     }
 
