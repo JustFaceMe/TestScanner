@@ -23,53 +23,39 @@ import com.google.zxing.ResultMetadataType;
 import com.google.zxing.ResultPoint;
 import com.google.zxing.client.android.camera.CameraManager;
 import com.google.zxing.client.android.clipboard.ClipboardInterface;
-import com.google.zxing.client.android.history.HistoryActivity;
 import com.google.zxing.client.android.history.HistoryItem;
 import com.google.zxing.client.android.history.HistoryManager;
-import com.google.zxing.client.android.result.ResultButtonListener;
 import com.google.zxing.client.android.result.ResultHandler;
 import com.google.zxing.client.android.result.ResultHandlerFactory;
-import com.google.zxing.client.android.result.supplement.SupplementalInfoRetriever;
-import com.google.zxing.client.android.share.ShareActivity;
 import com.google.zxing.client.android.result.ResultManager;
 
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
-import android.graphics.Matrix;
-import android.graphics.Paint;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.preference.PreferenceManager;
 import android.util.Log;
-import android.util.TypedValue;
 import android.view.KeyEvent;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
-import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.IOException;
-import java.text.DateFormat;
 import java.util.Collection;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -141,8 +127,6 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
     inactivityTimer = new InactivityTimer(this);
     beepManager = new BeepManager(this);
     ambientLightManager = new AmbientLightManager(this);
-
-    PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
   }
 
   @Override
@@ -352,36 +336,6 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
   }
 
   @Override
-  public boolean onCreateOptionsMenu(Menu menu) {
-    MenuInflater menuInflater = getMenuInflater();
-    menuInflater.inflate(R.menu.capture, menu);
-    return super.onCreateOptionsMenu(menu);
-  }
-
-  @Override
-  public boolean onOptionsItemSelected(MenuItem item) {
-    Intent intent = new Intent(Intent.ACTION_VIEW);
-    intent.addFlags(Intents.FLAG_NEW_DOC);
-    int itemId = item.getItemId();
-    if (itemId == R.id.menu_share) {
-      intent.setClassName(this, ShareActivity.class.getName());
-      startActivity(intent);
-    } else if (itemId == R.id.menu_history) {
-      intent.setClassName(this, HistoryActivity.class.getName());
-      startActivityForResult(intent, HISTORY_REQUEST_CODE);
-    } else if (itemId == R.id.menu_settings) {
-      intent.setClassName(this, PreferencesActivity.class.getName());
-      startActivity(intent);
-    } else if (itemId == R.id.menu_help) {
-      intent.setClassName(this, HelpActivity.class.getName());
-      startActivity(intent);
-    } else {
-      return super.onOptionsItemSelected(item);
-    }
-    return true;
-  }
-
-  @Override
   public void onActivityResult(int requestCode, int resultCode, Intent intent) {
     if (resultCode == RESULT_OK && requestCode == HISTORY_REQUEST_CODE && historyManager != null) {
       int itemNumber = intent.getIntExtra(Intents.History.ITEM_NUMBER, -1);
@@ -469,53 +423,10 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
           // Wait a moment or else it will scan the same barcode continuously about 3 times
           restartPreviewAfterDelay(BULK_MODE_SCAN_DELAY_MS);
         } else {
-//          handleDecodeInternally(rawResult, resultHandler, barcode);
+          handleDecodeInternally(rawResult, resultHandler, barcode);
           handleDecodeExternally(rawResult, resultHandler, barcode);
         }
         break;
-    }
-  }
-
-  /**
-   * Superimpose a line for 1D or dots for 2D to highlight the key features of the barcode.
-   * 高亮识别的二维码
-   * @param barcode   A bitmap of the captured image.
-   * @param scaleFactor amount by which thumbnail was scaled
-   * @param rawResult The decoded results which contains the points to draw.
-   */
-  private void drawResultPoints(Bitmap barcode, float scaleFactor, Result rawResult) {
-    ResultPoint[] points = rawResult.getResultPoints();
-    if (points != null && points.length > 0) {
-      Canvas canvas = new Canvas(barcode);
-      Paint paint = new Paint();
-      paint.setColor(getResources().getColor(R.color.result_points));
-      if (points.length == 2) {
-        paint.setStrokeWidth(4.0f);
-        drawLine(canvas, paint, points[0], points[1], scaleFactor);
-      } else if (points.length == 4 &&
-                 (rawResult.getBarcodeFormat() == BarcodeFormat.UPC_A ||
-                  rawResult.getBarcodeFormat() == BarcodeFormat.EAN_13)) {
-        // Hacky special case -- draw two lines, for the barcode and metadata
-        drawLine(canvas, paint, points[0], points[1], scaleFactor);
-        drawLine(canvas, paint, points[2], points[3], scaleFactor);
-      } else {
-        paint.setStrokeWidth(10.0f);
-        ResultPoint point1 = ResultManager.getCenterPoint(points);
-        if(point1 != null) {
-          paint.setColor(getResources().getColor(R.color.result_points5));
-          canvas.drawCircle(scaleFactor * point1.getX(), scaleFactor * point1.getY(), 50 ,paint);
-        }
-      }
-    }
-  }
-
-  private static void drawLine(Canvas canvas, Paint paint, ResultPoint a, ResultPoint b, float scaleFactor) {
-    if (a != null && b != null) {
-      canvas.drawLine(scaleFactor * a.getX(), 
-                      scaleFactor * a.getY(), 
-                      scaleFactor * b.getX(), 
-                      scaleFactor * b.getY(), 
-                      paint);
     }
   }
 
@@ -528,7 +439,7 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
    * @param barcode
    */
   private void handleDecodeInternally(Result rawResult, ResultHandler resultHandler, Bitmap barcode) {
-
+    cameraManager.stopPreview();
     maybeSetClipboard(resultHandler);
 
     if (resultHandler.getDefaultButtonID() != null && DecodeConfigParams.KEY_AUTO_OPEN_WEB) {
@@ -540,84 +451,11 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
     viewfinderView.setVisibility(View.GONE);
     resultView.setVisibility(View.VISIBLE);
 
-    ImageView barcodeImageView = (ImageView) findViewById(R.id.barcode_image_view);
-    if (barcode == null) {
-      barcodeImageView.setImageBitmap(BitmapFactory.decodeResource(getResources(),
-          R.drawable.launcher_icon));
-    } else {
-      barcodeImageView.setImageBitmap(barcode);
-    }
-
-    TextView formatTextView = (TextView) findViewById(R.id.format_text_view);
-    formatTextView.setText(rawResult.getBarcodeFormat().toString());
-
-    TextView typeTextView = (TextView) findViewById(R.id.type_text_view);
-    typeTextView.setText(resultHandler.getType().toString());
-
-    DateFormat formatter = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT);
-    TextView timeTextView = (TextView) findViewById(R.id.time_text_view);
-    timeTextView.setText(formatter.format(rawResult.getTimestamp()));
-
-
-    TextView metaTextView = (TextView) findViewById(R.id.meta_text_view);
-    View metaTextViewLabel = findViewById(R.id.meta_text_view_label);
-    metaTextView.setVisibility(View.GONE);
-    metaTextViewLabel.setVisibility(View.GONE);
-    Map<ResultMetadataType,Object> metadata = rawResult.getResultMetadata();
-    if (metadata != null) {
-      StringBuilder metadataText = new StringBuilder(20);
-      for (Map.Entry<ResultMetadataType,Object> entry : metadata.entrySet()) {
-        if (DISPLAYABLE_METADATA_TYPES.contains(entry.getKey())) {
-          metadataText.append(entry.getValue()).append('\n');
-        }
-      }
-      if (metadataText.length() > 0) {
-        metadataText.setLength(metadataText.length() - 1);
-        metaTextView.setText(metadataText);
-        metaTextView.setVisibility(View.VISIBLE);
-        metaTextViewLabel.setVisibility(View.VISIBLE);
-      }
-    }
-
-    CharSequence displayContents = resultHandler.getDisplayContents();
-    TextView contentsTextView = (TextView) findViewById(R.id.contents_text_view);
-    contentsTextView.setText(displayContents);
-    int scaledSize = Math.max(22, 32 - displayContents.length() / 4);
-    contentsTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, scaledSize);
-
-    TextView supplementTextView = (TextView) findViewById(R.id.contents_supplement_text_view);
-    supplementTextView.setText("");
-    supplementTextView.setOnClickListener(null);
-    if (DecodeConfigParams.KEY_SUPPLEMENTAL) {
-      SupplementalInfoRetriever.maybeInvokeRetrieval(supplementTextView,
-                                                     resultHandler.getResult(),
-                                                     historyManager,
-                                                     this);
-    }
-
-    int buttonCount = resultHandler.getButtonCount();
-    ViewGroup buttonView = (ViewGroup) findViewById(R.id.result_button_view);
-    buttonView.requestFocus();
-    for (int x = 0; x < ResultHandler.MAX_BUTTON_COUNT; x++) {
-      TextView button = (TextView) buttonView.getChildAt(x);
-      if (x < buttonCount) {
-        button.setVisibility(View.VISIBLE);
-        button.setText(resultHandler.getButtonText(x));
-        button.setOnClickListener(new ResultButtonListener(resultHandler, x));
-      } else {
-        button.setVisibility(View.GONE);
-      }
-    }
-
+    addResultPoints();
   }
 
   // Briefly show the contents of the barcode, then handle the result outside Barcode Scanner.
   private void handleDecodeExternally(Result rawResult, ResultHandler resultHandler, Bitmap barcode) {
-
-    if (barcode != null) {
-      barcode = rotateBitmap(barcode);
-      viewfinderView.drawResultBitmap(barcode);
-    }
 
     long resultDurationMS;
     if (getIntent() == null) {
@@ -751,6 +589,7 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
     if (handler != null) {
       handler.sendEmptyMessageDelayed(R.id.restart_preview, delayMS);
     }
+    cameraManager.startPreview();
     resetStatusView();
   }
 
@@ -766,19 +605,28 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
     viewfinderView.drawViewfinder();
   }
 
-  private static Bitmap rotateBitmap(Bitmap origin) {
-    if (origin == null) {
-      return null;
+  /**
+   * 添加扫描结果在屏幕上的位置指示点
+   */
+  private void addResultPoints() {
+    float[] ratios = cameraManager.getCameraScreenRatio();
+    List<ResultPoint> centerPoints = ResultManager.dealResults(viewfinderView.getWidth(), ratios[0], ratios[1]);
+
+    if(centerPoints == null && centerPoints.size() <= 0) {
+      //TODO... 未扫描到结果，走扫描失败逻辑
+      return;
     }
-    int width = origin.getWidth();
-    int height = origin.getHeight();
-    Matrix matrix = new Matrix();
-    matrix.setRotate(90);
-    Bitmap newBM = Bitmap.createBitmap(origin, 0, 0, width, height, matrix, false);
-    if (newBM.equals(origin)) {
-      return newBM;
+
+    RelativeLayout group = findViewById(R.id.result_points_group);
+    group.removeAllViews();
+    for (ResultPoint point : centerPoints) {
+      View view = new View(this);
+      view.setBackgroundColor(Color.GREEN);
+      RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(100, 100);
+      params.leftMargin = (int) (point.getX() - 50);
+      params.topMargin = (int) (point.getY() - 50);
+      view.setLayoutParams(params);
+      group.addView(view);
     }
-    origin.recycle();
-    return newBM;
   }
 }

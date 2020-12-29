@@ -93,7 +93,8 @@ final class DecodeHandler extends Handler {
         Message message = Message.obtain(handler, R.id.decode_succeeded, results);
         Bundle bundle = new Bundle();
 //        bundleThumbnail(source, bundle);
-        previewFrame(data, source, bundle);
+//        previewFrame(data, source, bundle);
+        bundle.putFloat(DecodeThread.BARCODE_SCALED_FACTOR, 1.0f);
         message.setData(bundle);
         message.sendToTarget();
       }
