@@ -31,6 +31,7 @@ import com.google.zxing.client.android.result.ResultHandler;
 import com.google.zxing.client.android.result.ResultHandlerFactory;
 import com.google.zxing.client.android.result.supplement.SupplementalInfoRetriever;
 import com.google.zxing.client.android.share.ShareActivity;
+import com.google.zxing.client.android.utils.ResultManager;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -448,7 +449,6 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
       historyManager.addHistoryItem(rawResult, resultHandler);
       // Then not from history, so beep/vibrate and we have an image to draw on
       beepManager.playBeepSoundAndVibrate();
-      drawResultPoints(barcode, scaleFactor, rawResult);
     }
 
     switch (source) {
@@ -504,10 +504,10 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
         drawLine(canvas, paint, points[2], points[3], scaleFactor);
       } else {
         paint.setStrokeWidth(10.0f);
-        for (ResultPoint point : points) {
-          if (point != null) {
-            canvas.drawPoint(scaleFactor * point.getX(), scaleFactor * point.getY(), paint);
-          }
+        ResultPoint point1 = ResultManager.getCenterPoint(points);
+        if(point1 != null) {
+          paint.setColor(getResources().getColor(R.color.result_points5));
+          canvas.drawCircle(scaleFactor * point1.getX(), scaleFactor * point1.getY(), 50 ,paint);
         }
       }
     }

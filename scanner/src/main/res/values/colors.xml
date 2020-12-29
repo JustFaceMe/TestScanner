@@ -26,4 +26,11 @@
   <color name="transparent">#00000000</color>
   <color name="viewfinder_laser">#ffcc0000</color> <!-- Android standard ICS color -->
   <color name="viewfinder_mask">#60000000</color>
+
+
+  <color name="result_points1">#c099cc00</color>
+  <color name="result_points2">#c0ffcc00</color>
+  <color name="result_points3">#c000ffff</color>
+  <color name="result_points4">#c0ff0000</color>
+  <color name="result_points5">#ffff00ff</color>
 </resources>

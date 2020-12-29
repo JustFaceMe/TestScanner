@@ -96,8 +96,11 @@ public final class CaptureActivityHandler extends Handler {
       }
       Result[] results = (Result[]) message.obj;
       for(int i = 0; i < results.length; i++) {
-        Log.e("QrCode",  i + " -- " + results[i].toString());
+        for (int j = 0; j < results[i].getResultPoints().length; j++){
+          Log.e("QrCode",  i + " -- " +j + " == " + results[i].getResultPoints()[j].toString());
+        }
       }
+      ResultManager.initResults(results);
       activity.handleDecode(results[0], barcode, scaleFactor);
     } else if (message.what == R.id.decode_failed) {// We're decoding as fast as possible, so when one decode fails, start another.
       state = State.PREVIEW;

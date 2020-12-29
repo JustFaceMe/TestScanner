@@ -128,7 +128,9 @@ final class DecodeHandler extends Handler {
     BitmapFactory.Options localOptions = new BitmapFactory.Options();
     localOptions.inPreferredConfig = Bitmap.Config.RGB_565;  //构造位图生成的参数，必须为565。类名+enum
     Bitmap mCurrentBitmap = BitmapFactory.decodeByteArray(mParamArrayOfByte, 0, mParamArrayOfByte.length, localOptions);
-    Log.e("previewFrame", ""+mCurrentBitmap.getHeight());
+    Log.e("QrCode localSize", "w = "+localSize.width +" -- h = " +localSize.height);
+    Log.e("QrCode bitmap", "w = "+mCurrentBitmap.getWidth() +" -- h = " +mCurrentBitmap.getHeight());
+    Log.e("QrCode source", "w = "+source.getWidth() +" -- h = " +source.getHeight());
     bundle.putByteArray(DecodeThread.BARCODE_BITMAP, mParamArrayOfByte);
     bundle.putFloat(DecodeThread.BARCODE_SCALED_FACTOR, (float) mCurrentBitmap.getWidth() / source.getWidth());
   }

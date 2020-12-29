@@ -18,12 +18,14 @@ package com.google.zxing.client.android;
 
 import com.google.zxing.ResultPoint;
 import com.google.zxing.client.android.camera.CameraManager;
+import com.google.zxing.client.android.utils.ResultManager;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.util.AttributeSet;
@@ -56,6 +58,7 @@ public final class ViewfinderView extends View {
   private int scannerAlpha;
   private List<ResultPoint> possibleResultPoints;
   private List<ResultPoint> lastPossibleResultPoints;
+  private List<ResultPoint> centerPoints;
 
   // This constructor is used when the class is built from an XML resource.
   public ViewfinderView(Context context, AttributeSet attrs) {
@@ -98,6 +101,7 @@ public final class ViewfinderView extends View {
       // Draw the opaque result bitmap over the scanning rectangle
       paint.setAlpha(255);
       canvas.drawBitmap(resultBitmap, null, frame, paint);
+      drawCenterPoints(canvas, paint);
     } else {
 
       // Draw a red "laser scanner" line through the middle to show decoding is active
@@ -164,6 +168,8 @@ public final class ViewfinderView extends View {
    */
   public void drawResultBitmap(Bitmap barcode) {
     resultBitmap = barcode;
+    float[] ratios = cameraManager.getCameraScreenRatio();
+    centerPoints = ResultManager.dealResults(getWidth(), ratios[0], ratios[1]);
     invalidate();
   }
 
@@ -176,6 +182,17 @@ public final class ViewfinderView extends View {
         // trim it
         points.subList(0, size - MAX_RESULT_POINTS / 2).clear();
       }
+    }
+  }
+
+  private void drawCenterPoints(Canvas canvas, Paint paint) {
+    if(centerPoints == null || centerPoints.size() <= 0) {
+      return;
+    }
+
+    paint.setColor(Color.RED);
+    for (ResultPoint point: centerPoints) {
+      canvas.drawCircle(point.getX(), point.getY(), 50, paint);
     }
   }
 

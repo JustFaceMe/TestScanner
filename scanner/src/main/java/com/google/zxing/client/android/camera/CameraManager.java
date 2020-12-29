@@ -78,6 +78,19 @@ public final class CameraManager {
   }
 
   /**
+   * [0] x轴比例， [1] y轴比例
+   * @return
+   */
+  public float[] getCameraScreenRatio() {
+    float[] ratios = new float[2];
+    Point camera = configManager.getCameraResolution();
+    Point screen = configManager.getScreenResolution();
+    ratios[0] = 1.0f * camera.y / screen.x;
+    ratios[1] = 1.0f * camera.x / screen.y;
+    return ratios;
+  }
+
+  /**
    * Opens the camera driver and initializes the hardware parameters.
    *
    * @param holder The surface object which the camera will draw preview frames into.
