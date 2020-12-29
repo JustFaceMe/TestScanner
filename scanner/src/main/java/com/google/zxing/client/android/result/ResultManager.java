@@ -19,21 +19,17 @@ public class ResultManager {
         results = array;
     }
 
-    public static ArrayList<ResultPoint> dealResults(int w, float cameraScreenRatioX, float cameraScreenRatioY) {
-        ArrayList<ResultPoint> points = new ArrayList<>();
+    public static Result[] dealResults(int w, float cameraScreenRatioX, float cameraScreenRatioY) {
         if(results == null || results.length <= 0){
-            return points;
+            return results;
         }
         for (Result result : results) {
-            ResultPoint newP = dealResult(result, w, cameraScreenRatioX, cameraScreenRatioY);
-            if(newP != null) {
-                points.add(newP);
-            }
+            dealResult(result, w, cameraScreenRatioX, cameraScreenRatioY);
         }
-        return points;
+        return results;
     }
 
-    private static ResultPoint dealResult(Result result, int w, float cameraScreenRatioX, float cameraScreenRatioY) {
+    private static Result dealResult(Result result, int w, float cameraScreenRatioX, float cameraScreenRatioY) {
         if(result == null) {
             return null;
         }
@@ -48,7 +44,8 @@ public class ResultManager {
         float x = w - center.getY() / cameraScreenRatioX;
         float y = center.getX() / cameraScreenRatioY;
         ResultPoint point = new ResultPoint(x, y);
-        return point;
+        result.addResultPoints(new ResultPoint[]{point});
+        return result;
     }
 
     public static ResultPoint getCenterPoint(ResultPoint[] points) {

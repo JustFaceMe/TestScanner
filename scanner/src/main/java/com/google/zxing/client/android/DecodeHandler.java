@@ -106,6 +106,11 @@ final class DecodeHandler extends Handler {
     }
   }
 
+  /**
+   * 黑白bitmap
+   * @param source
+   * @param bundle
+   */
   private static void bundleThumbnail(PlanarYUVLuminanceSource source, Bundle bundle) {
     int[] pixels = source.renderThumbnail();
     int width = source.getThumbnailWidth();
@@ -117,6 +122,12 @@ final class DecodeHandler extends Handler {
     bundle.putFloat(DecodeThread.BARCODE_SCALED_FACTOR, (float) width / source.getWidth());
   }
 
+  /**
+   * 彩色bitmap
+   * @param data
+   * @param source
+   * @param bundle
+   */
   public void previewFrame(byte[] data, PlanarYUVLuminanceSource source, Bundle bundle) {
     Camera camera = activity.getCameraManager().getCamera().getCamera();
     Camera.Size localSize = camera.getParameters().getPreviewSize();  //获得预览分辨率

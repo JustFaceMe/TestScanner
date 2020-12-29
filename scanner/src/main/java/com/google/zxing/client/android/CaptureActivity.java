@@ -28,6 +28,8 @@ import com.google.zxing.client.android.history.HistoryManager;
 import com.google.zxing.client.android.result.ResultHandler;
 import com.google.zxing.client.android.result.ResultHandlerFactory;
 import com.google.zxing.client.android.result.ResultManager;
+import com.google.zxing.client.android.view.MoreResultPointView;
+import com.google.zxing.client.android.view.SingleResultPointView;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -610,23 +612,21 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
    */
   private void addResultPoints() {
     float[] ratios = cameraManager.getCameraScreenRatio();
-    List<ResultPoint> centerPoints = ResultManager.dealResults(viewfinderView.getWidth(), ratios[0], ratios[1]);
+    Result[] centerPoints = ResultManager.dealResults(viewfinderView.getWidth(), ratios[0], ratios[1]);
 
-    if(centerPoints == null && centerPoints.size() <= 0) {
+    if(centerPoints == null && centerPoints.length <= 0) {
       //TODO... 未扫描到结果，走扫描失败逻辑
       return;
     }
 
     RelativeLayout group = findViewById(R.id.result_points_group);
     group.removeAllViews();
-    for (ResultPoint point : centerPoints) {
-      View view = new View(this);
-      view.setBackgroundColor(Color.GREEN);
-      RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(100, 100);
-      params.leftMargin = (int) (point.getX() - 50);
-      params.topMargin = (int) (point.getY() - 50);
-      view.setLayoutParams(params);
-      group.addView(view);
+    if(centerPoints.length == 1) {
+      group.addView(new SingleResultPointView(this, centerPoints[0]));
+      return;
+    }
+    for (Result point : centerPoints) {
+      group.addView(new MoreResultPointView(this, point));
     }
   }
 }
