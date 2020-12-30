@@ -401,9 +401,10 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
     boolean fromLiveScan = barcode != null;
     if (fromLiveScan) {
       historyManager.addHistoryItem(rawResult, resultHandler);
-      // Then not from history, so beep/vibrate and we have an image to draw on
-      beepManager.playBeepSoundAndVibrate();
     }
+
+    // Then not from history, so beep/vibrate and we have an image to draw on
+    beepManager.playBeepSoundAndVibrate();
 
     switch (source) {
       case NATIVE_APP_INTENT:

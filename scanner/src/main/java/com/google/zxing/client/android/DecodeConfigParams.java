@@ -42,7 +42,7 @@ public class DecodeConfigParams {
     // 开启自动对焦
     public static boolean KEY_AUTO_FOCUS = true;
     // 开启反色模式
-    public static boolean KEY_INVERT_SCAN = true;
+    public static boolean KEY_INVERT_SCAN = false;
     // 搜索引擎国别
     public static String KEY_SEARCH_COUNTRY = "-";
     // 禁用自动定向，不自动旋转
