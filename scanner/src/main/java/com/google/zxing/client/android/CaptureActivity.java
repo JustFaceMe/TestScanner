@@ -20,7 +20,6 @@ import com.google.zxing.BarcodeFormat;
 import com.google.zxing.DecodeHintType;
 import com.google.zxing.Result;
 import com.google.zxing.ResultMetadataType;
-import com.google.zxing.ResultPoint;
 import com.google.zxing.client.android.camera.CameraManager;
 import com.google.zxing.client.android.clipboard.ClipboardInterface;
 import com.google.zxing.client.android.history.HistoryItem;
@@ -28,7 +27,9 @@ import com.google.zxing.client.android.history.HistoryManager;
 import com.google.zxing.client.android.result.ResultHandler;
 import com.google.zxing.client.android.result.ResultHandlerFactory;
 import com.google.zxing.client.android.result.ResultManager;
+import com.google.zxing.client.android.view.LaserView;
 import com.google.zxing.client.android.view.MoreResultPointView;
+import com.google.zxing.client.android.view.OnResultClickListener;
 import com.google.zxing.client.android.view.SingleResultPointView;
 
 import android.app.Activity;
@@ -37,7 +38,6 @@ import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
-import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -68,7 +68,7 @@ import java.util.Map;
  * @author dswitkin@google.com (Daniel Switkin)
  * @author Sean Owen
  */
-public final class CaptureActivity extends Activity implements SurfaceHolder.Callback {
+public final class CaptureActivity extends Activity implements SurfaceHolder.Callback, OnResultClickListener {
 
   private static final String TAG = CaptureActivity.class.getSimpleName();
 
@@ -88,7 +88,6 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
   private CameraManager cameraManager;
   private CaptureActivityHandler handler;
   private Result savedResultToShow;
-  private ViewfinderView viewfinderView;
   private TextView statusView;
   private View resultView;
   private Result lastResult;
@@ -104,10 +103,9 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
   private InactivityTimer inactivityTimer;
   private BeepManager beepManager;
   private AmbientLightManager ambientLightManager;
-
-  ViewfinderView getViewfinderView() {
-    return viewfinderView;
-  }
+  private RelativeLayout resultPointsGroup;
+  private LaserView laserView;
+  private View backView;
 
   public Handler getHandler() {
     return handler;
@@ -145,11 +143,19 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
     // off screen.
     cameraManager = new CameraManager(getApplication());
 
-    viewfinderView = (ViewfinderView) findViewById(R.id.viewfinder_view);
-    viewfinderView.setCameraManager(cameraManager);
-
     resultView = findViewById(R.id.result_view);
     statusView = (TextView) findViewById(R.id.status_view);
+    laserView = findViewById(R.id.laser_view);
+
+    resultPointsGroup = findViewById(R.id.result_points_group);
+    backView = findViewById(R.id.back);
+    backView.setOnClickListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View v) {
+        setResult(RESULT_CANCELED);
+        finish();
+      }
+    });
 
     handler = null;
     lastResult = null;
@@ -204,11 +210,6 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
           if (cameraId >= 0) {
             cameraManager.setManualCameraId(cameraId);
           }
-        }
-        
-        String customPromptMessage = intent.getStringExtra(Intents.Scan.PROMPT_MESSAGE);
-        if (customPromptMessage != null) {
-          statusView.setText(customPromptMessage);
         }
 
       } else if (dataString != null &&
@@ -450,7 +451,8 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
     }
 
     statusView.setVisibility(View.GONE);
-    viewfinderView.setVisibility(View.GONE);
+    laserView.setVisibility(View.GONE);
+    laserView.setVisibility(View.GONE);
     resultView.setVisibility(View.VISIBLE);
 
     addResultPoints();
@@ -465,14 +467,6 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
     } else {
       resultDurationMS = getIntent().getLongExtra(Intents.Scan.RESULT_DISPLAY_DURATION_MS,
                                                   DEFAULT_INTENT_RESULT_DURATION_MS);
-    }
-
-    if (resultDurationMS > 0) {
-      String rawResultString = String.valueOf(rawResult);
-      if (rawResultString.length() > 32) {
-        rawResultString = rawResultString.substring(0, 32) + " ...";
-      }
-      statusView.setText(getString(resultHandler.getDisplayTitle()) + " : " + rawResultString);
     }
 
     maybeSetClipboard(resultHandler);
@@ -599,12 +593,12 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
     resultView.setVisibility(View.GONE);
     statusView.setText(R.string.msg_default_status);
     statusView.setVisibility(View.VISIBLE);
-    viewfinderView.setVisibility(View.VISIBLE);
+    laserView.setVisibility(View.VISIBLE);
+    laserView.setVisibility(View.VISIBLE);
     lastResult = null;
   }
 
   public void drawViewfinder() {
-    viewfinderView.drawViewfinder();
   }
 
   /**
@@ -612,21 +606,28 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
    */
   private void addResultPoints() {
     float[] ratios = cameraManager.getCameraScreenRatio();
-    Result[] centerPoints = ResultManager.dealResults(viewfinderView.getWidth(), ratios[0], ratios[1]);
+    Result[] centerPoints = ResultManager.dealResults(laserView.getWidth(), ratios[0], ratios[1]);
 
     if(centerPoints == null && centerPoints.length <= 0) {
-      //TODO... 未扫描到结果，走扫描失败逻辑
+      restartPreviewAfterDelay(0);
       return;
     }
 
-    RelativeLayout group = findViewById(R.id.result_points_group);
-    group.removeAllViews();
+    resultPointsGroup.removeAllViews();
     if(centerPoints.length == 1) {
-      group.addView(new SingleResultPointView(this, centerPoints[0]));
+      resultPointsGroup.addView(new SingleResultPointView(this, centerPoints[0], this));
       return;
     }
+    statusView.setText("轻触小绿点，打开页面");
+    statusView.setVisibility(View.VISIBLE);
     for (Result point : centerPoints) {
-      group.addView(new MoreResultPointView(this, point));
+      resultPointsGroup.addView(new MoreResultPointView(this, point, this));
     }
+  }
+
+  @Override
+  public void onResultClick(Result result) {
+    //TODO... 返回被点击的结果
+    Toast.makeText(this, result.getText(), Toast.LENGTH_SHORT).show();
   }
 }

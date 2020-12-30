@@ -1,7 +1,6 @@
 package com.google.zxing.client.android.view;
 
 import android.content.Context;
-import android.graphics.Color;
 
 import androidx.annotation.NonNull;
 
@@ -14,11 +13,13 @@ import com.google.zxing.Result;
  */
 public class MoreResultPointView extends SingleResultPointView{
 
-    public MoreResultPointView(@NonNull Context context, Result result) {
-        super(context, result);
+
+    public MoreResultPointView(@NonNull Context context, Result result, OnResultClickListener listener) {
+        super(context, result, listener);
     }
 
+    @Override
     protected void initPreviewData() {
-        setBackgroundColor(Color.GREEN);
+        super.initPreviewData();
     }
 }

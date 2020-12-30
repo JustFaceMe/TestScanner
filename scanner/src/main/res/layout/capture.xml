@@ -21,10 +21,11 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-    <com.google.zxing.client.android.ViewfinderView
-        android:id="@+id/viewfinder_view"
+    <com.google.zxing.client.android.view.LaserView
+        android:id="@+id/laser_view"
+        android:visibility="gone"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"/>
 
     <FrameLayout
         android:id="@+id/result_view"
@@ -49,8 +50,18 @@
         android:id="@+id/status_view"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="100dp"
         android:layout_gravity="bottom|center_horizontal"
         android:background="@color/transparent"
         android:text="@string/msg_default_status"
         android:textColor="@color/status_text" />
+
+    <TextView
+        android:id="@+id/back"
+        android:text="取消"
+        android:layout_marginTop="20dp"
+        android:textColor="#FFFFFF"
+        android:gravity="center"
+        android:layout_width="100dp"
+        android:layout_height="50dp"/>
 </merge>
