@@ -3,7 +3,6 @@ package com.google.zxing.client.android.result;
 import com.google.zxing.Result;
 import com.google.zxing.ResultPoint;
 
-import java.util.ArrayList;
 
 /**
  * @user: dong.wang
@@ -11,7 +10,6 @@ import java.util.ArrayList;
  * @desc:
  */
 public class ResultManager {
-    private static final String TAG = ResultManager.class.getSimpleName();
 
     private static Result[] results;
 
